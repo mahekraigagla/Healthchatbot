@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HealthBot - Disease Prediction Assistant</title>
+    <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background:#f0f2f5; height:100vh; overflow:hidden; display:flex; justify-content:center; align-items:center; }
+    .main-container { width:95%; max-width:1200px; height:90vh; display:flex; border-radius:20px; box-shadow:0 5px 25px rgba(0,0,0,.15); overflow:hidden; background:#fff; }
+
+    .sidebar { width:30%; background: linear-gradient(180deg, #36c, #6a89cc); color:#fff; padding:30px 20px; display:flex; flex-direction:column; justify-content:space-between; }
+    .sidebar-header h1 { font-size:1.8rem; font-weight:700; margin-bottom:5px; }
+    .sidebar-header p { font-size:1rem; opacity:.9; }
+    .sidebar-section { margin-top:40px; flex:1; }
+    .sidebar-section h3 { font-size:1.05rem; margin:14px 0 6px; }
+    .sidebar-section p { opacity:.95; }
+    .start-session { background:rgba(255,255,255,.15); color:#fff; border:0; border-radius:25px; padding:12px 18px; font-size:1rem; cursor:pointer; }
+
+    .chat-area { width:70%; display:flex; flex-direction:column; background:#fff; }
+    .chat-header { background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; }
+    .header-actions { display:flex; gap:10px; align-items:center; }
+    .toggle-btn { cursor:pointer; background:#ffffff20; color:#fff; border:1px solid #ffffff30; border-radius:20px; padding:6px 12px; font-size:.9rem; }
+
+    .chat-body { flex:1; padding:20px; overflow-y:auto; background:#f7f7fb; }
+    .message { margin:10px 0; padding:12px 14px; border-radius:12px; max-width:75%; line-height:1.5; word-wrap:break-word; }
+    .user-message { background:#667eea; color:#fff; margin-left:auto; border-bottom-right-radius:0; }
+    .bot-message { background:#e5e5ea; color:#111; border-bottom-left-radius:0; }
+
+    .chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+    .chip { background:#eef; color:#334; border:1px solid #ccd; padding:6px 10px; border-radius:16px; cursor:pointer; font-size:.9rem; }
+    .chip.no { background:#fee; color:#633; border-color:#f6c; }
+
+    .candidates { margin-top:8px; }
+    .candidate { background:#fff; border:1px solid #ddd; border-radius:10px; padding:10px; margin:8px 0; }
+    .bar { height:6px; background:#eee; border-radius:6px; overflow:hidden; margin-top:6px; }
+    .bar > span { display:block; height:100%; background:#667eea; }
+
+    .chat-input { display:flex; align-items:center; padding:14px; background:#f0f0f0; border-top:1px solid #ddd; gap:10px; }
+    .chat-input input { flex:1; padding:12px 15px; border:1px solid #ccc; border-radius:25px; font-size:1rem; outline:none; }
+    .chat-input button { background:#667eea; color:#fff; border:0; border-radius:25px; padding:12px 20px; font-size:1rem; cursor:pointer; }
+    .mic { background:#10b981; }
+
+    /* Autocomplete dropdown */
+    .suggest-box { position:relative; }
+    .suggest-list { position:absolute; left:0; right:0; top:100%; background:#fff; border:1px solid #ddd; border-radius:10px; z-index:10; overflow:hidden; }
+    .suggest-item { padding:8px 10px; cursor:pointer; }
+    .suggest-item:hover { background:#f0f0ff; }
+
+    /* Dark mode */
+    body.dark { background:#0f1220; color:#e5e7eb; }
+    body.dark .main-container { background:#111827; }
+    body.dark .sidebar { background: linear-gradient(180deg,#111827,#1f2937); }
+    body.dark .chat-header { background: linear-gradient(90deg,#374151,#4b5563); }
+    body.dark .chat-body { background:#0f172a; }
+    body.dark .bot-message { background:#1f2937; color:#e5e7eb; }
+    body.dark .user-message { background:#4f46e5; }
+    body.dark .chat-input { background:#111827; border-top-color:#1f2937; }
+
+    body.large-font { font-size:18px; }
+
+    @media (max-width:900px){ .main-container{ flex-direction:column; height:auto;} .sidebar{ width:100%; flex-direction:row; justify-content:space-around; align-items:center;} .chat-area{ width:100%; } }
+    </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="sidebar">
+      <div>
+        <div class="sidebar-header">
+          <h1>🤖 HealthBot</h1>
+          <p>Your AI Health Assistant</p>
+        </div>
+        <div class="sidebar-section">
+          <h3>👤 Patient</h3>
+          <p id="patient-info">Not provided yet</p>
+          <h3>💊 Symptoms</h3>
+          <p id="symptoms-info">Not provided yet</p>
+          <h3>📍 Location</h3>
+          <select id="locationSelect" style="width:100%; margin-top:4px; padding:6px 8px; border-radius:8px; border:1px solid #ddd; font-size:.9rem;">
+            <option value="">Select your area</option>
+            <option value="Marine Lines / South Mumbai">Marine Lines / South Mumbai</option>
+            <option value="Peddar Road / South Mumbai">Peddar Road / South Mumbai</option>
+            <option value="Charni Road / South Mumbai">Charni Road / South Mumbai</option>
+            <option value="Tardeo / South Mumbai">Tardeo / South Mumbai</option>
+            <option value="Mumbai Central">Mumbai Central</option>
+            <option value="Sion East">Sion East</option>
+            <option value="King’s Circle / Sion">King’s Circle / Sion</option>
+            <option value="Sion West">Sion West</option>
+            <option value="Dharavi-Sion Link Road">Dharavi-Sion Link Road</option>
+            <option value="Mahim">Mahim</option>
+          </select>
+          <p id="location-info" style="margin-top:6px;">Not selected</p>
+          <h3>📊 Status</h3>
+          <p id="status-info">In progress</p>
+          <h3 style="margin-top:16px;">🕒 Sessions</h3>
+          <div id="session-list" style="max-height:160px; overflow-y:auto; margin-top:4px; font-size:.85rem;">
+            <p style="opacity:0.8;">No previous sessions</p>
+          </div>
+        </div>
+      </div>
+      <button class="start-session" id="resetBtn">🔄 Start New Session</button>
+    </div>
+
+      <div class="chat-area">
+        <div class="chat-header">
+          <h2>HealthBot - Disease Prediction Assistant</h2>
+          <div class="header-actions">
+            <select id="langSelect" class="toggle-btn">
+              <option value="en">English</option>
+              <option value="hi">हिन्दी</option>
+              <option value="mr">मराठी</option>
+            </select>
+            <button id="copyLinkBtn" class="toggle-btn">Copy Link</button>
+            <button id="emailBtn" class="toggle-btn">Email Report</button>
+            <button id="downloadBtn" class="toggle-btn">Download Report</button>
+            <button id="darkBtn" class="toggle-btn">Dark Mode</button>
+            <button id="fontBtn" class="toggle-btn">A+</button>
+          </div>
+        </div>
+
+      <div class="chat-body" id="chat">
+        <div class="message bot-message" id="greeting">
+          <!-- Initial greeting is filled from JS to support multiple languages -->
+        </div>
+      </div>
+
+                <div class="chat-input">
+        <div class="suggest-box" style="flex:1;">
+          <input id="input" type="text" placeholder="Type your answer..." />
+          <div id="suggest" class="suggest-list" style="display:none;"></div>
+                </div>
+        <button id="mic" class="mic">🎤</button>
+        <button id="send">Send</button>
+            </div>
+        </div>
+        </div>
+
+    <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('send');
+    const suggestBox = document.getElementById('suggest');
+    const micBtn = document.getElementById('mic');
+    const sessionList = document.getElementById('session-list');
+
+    const state = {
+      step:'name',
+      name:'',
+      age:'',
+      gender:'',
+      symptoms:[],
+      negatives:[],
+      lastPrediction:null,
+      allSymptoms:[],
+      lastSuggestions:[],
+      lang:'en',
+      location:'',
+      lastHospitals:[],
+      sessions:[]
+    };
+
+    // Simple text dictionary for future multilingual support
+    const TEXT = {
+      en: {
+        greeting: `Hello! 👋 I'm HealthBot.<br/>I'm here to help with disease prediction and medical recommendations.<br/>Let's start by getting to know you.<br/><br/><strong>What’s your name?</strong>`,
+        placeholderAnswer: 'Type your answer...',
+        placeholderSymptoms: 'e.g., headache, fever, nausea',
+        nameFollowup: (name)=>`Nice to meet you, <strong>${name}</strong>! 🎉<br/><br/>How old are you?`,
+        askGender: `Thanks! What's your gender? (Male/Female/Other)`,
+        askSymptoms: `Great. Please describe your symptoms (comma-separated or a sentence). You can also click suggestions when I show them.`,
+        noneHint: `Type "none of these" to skip these suggestions.`,
+        needMoreIntro: `I need a few more details to improve accuracy.`,
+        currentCandidates: `Current candidates:`,
+        moreQuestion: `Do you have any of these?`,
+        predictionTitle: `Most likely condition (not a confirmed diagnosis):`,
+        otherNote: `Other possible conditions:`,
+        disclaimer: `This is an AI-based estimate and <strong>not</strong> a medical diagnosis. Please consult a licensed doctor for any serious or persistent symptoms.`,
+        confidence: (label)=> label === 'high' ? 'High confidence' : (label === 'moderate' ? 'Moderate confidence' : 'Low confidence'),
+        reportTitle: 'HealthBot Report',
+        reportPredicted: 'Predicted Disease',
+        reportDescription: 'Description',
+        reportPrecautions: 'Precautions',
+        reportMedications: 'Medications',
+        reportDiet: 'Diet',
+        reportWorkout: 'Workout',
+        hospitalsTitle: 'Top nearby hospitals',
+        hospitalsNone: 'No hospital data available for your area yet.'
+      },
+      hi: {
+        greeting: `नमस्ते! 👋 मैं HealthBot हूँ।<br/>मैं आपको रोग की सम्भावना और मेडिकल रिकमेंडेशन में मदद करूँगा।<br/>सबसे पहले आपके बारे में जान लेते हैं।<br/><br/><strong>आपका नाम क्या है?</strong>`,
+        placeholderAnswer: 'अपना जवाब यहाँ लिखें...',
+        placeholderSymptoms: 'जैसे: सिरदर्द, बुखार, उल्टी',
+        nameFollowup: (name)=>`आपसे मिलकर अच्छा लगा, <strong>${name}</strong>! 🎉<br/><br/>आपकी उम्र क्या है?`,
+        askGender: `धन्यवाद! आपका जेंडर क्या है? (Male/Female/Other)`,
+        askSymptoms: `अच्छा, अब कृपया अपने लक्षण (symptoms) लिखें (कॉमा से अलग करके) या एक वाक्य में लिखें। जब मैं सुझाव दिखाऊँ तो आप उन पर भी क्लिक कर सकते हैं।`,
+        noneHint: `अगर इनमें से कोई भी नहीं है तो "none of these" लिखें।`,
+        needMoreIntro: `ज़्यादा सही अनुमान के लिए मुझे कुछ और लक्षण चाहिए।`,
+        currentCandidates: `अभी तक की सम्भावित बीमारियाँ:`,
+        moreQuestion: `क्या आपको इनमें से किसी तरह के लक्षण हैं?`,
+        predictionTitle: `सबसे अधिक सम्भावित स्थिति (यह पक्का निदान नहीं है):`,
+        otherNote: `अन्य सम्भावित स्थितियाँ:`,
+        disclaimer: `यह केवल AI आधारित अनुमान है, <strong>असली मेडिकल डायग्नोसिस नहीं</strong>। किसी भी गंभीर या लंबे समय तक रहने वाले लक्षणों के लिए कृपया डॉक्टर से अवश्य मिलें।`,
+        confidence: (label)=> label === 'high' ? 'उच्च भरोसा' : (label === 'moderate' ? 'मध्यम भरोसा' : 'कम भरोसा'),
+        reportTitle: 'HealthBot रिपोर्ट',
+        reportPredicted: 'अनुमानित रोग',
+        reportDescription: 'विवरण',
+        reportPrecautions: 'सावधानियाँ',
+        reportMedications: 'दवाइयाँ',
+        reportDiet: 'डाइट',
+        reportWorkout: 'वर्कआउट / व्यायाम',
+        hospitalsTitle: 'नज़दीकी प्रमुख अस्पताल',
+        hospitalsNone: 'आपके क्षेत्र के लिए अभी अस्पताल डेटा उपलब्ध नहीं है।'
+      },
+      mr: {
+        greeting: `नमस्कार! 👋 मी HealthBot आहे.<br/>मी तुम्हाला आजाराची शक्यता आणि वैद्यकीय सूचना देण्यासाठी मदत करेन।<br/>सुरुवात तुमची माहिती घेऊन करूया।<br/><br/><strong>तुमचं नाव काय आहे?</strong>`,
+        placeholderAnswer: 'इथे तुमचं उत्तर लिहा...',
+        placeholderSymptoms: 'उदा.: डोकेदुखी, ताप, उलटी',
+        nameFollowup: (name)=>`तुमची ओळख करून आनंद झाला, <strong>${name}</strong>! 🎉<br/><br/>तुमचे वय किती आहे?`,
+        askGender: `धन्यवाद! तुमचे लिंग काय आहे? (Male/Female/Other)`,
+        askSymptoms: `छान. आता कृपया तुमची लक्षणे (symptoms) लिहा (स्वल्पविरामांनी वेगळी करून) किंवा एका वाक्यात लिहा. मी जेव्हा सुचना दाखवेन तेव्हा तुम्ही त्यावर क्लिक करू शकता।`,
+        noneHint: `जर यापैकी काहीच नसेल तर "none of these" असे टाइप करा।`,
+        needMoreIntro: `जास्त अचूक अंदाजासाठी मला अजून काही लक्षणांची माहिती हवी आहे।`,
+        currentCandidates: `आतापर्यंतची संभाव्य आजारे:`,
+        moreQuestion: `यापैकी तुम्हाला काही लक्षणे आहेत का?`,
+        predictionTitle: `सर्वात संभाव्य स्थिती (हा अंतिम निदान नाही):`,
+        otherNote: `इतर संभाव्य स्थिती:`,
+        disclaimer: `हा फक्त AI आधारित अंदाज आहे, <strong>खरा वैद्यकीय निदान नाही</strong>। कोणतेही गंभीर किंवा सतत चालणारे लक्षण असल्यास कृपया डॉक्टरांचा सल्ला घ्या।`,
+        confidence: (label)=> label === 'high' ? 'उच्च विश्वास' : (label === 'moderate' ? 'मध्यम विश्वास' : 'कमी विश्वास'),
+        reportTitle: 'HealthBot अहवाल',
+        reportPredicted: 'अंदाजित आजार',
+        reportDescription: 'वर्णन',
+        reportPrecautions: 'काळजी / सावधगिरी',
+        reportMedications: 'औषधे',
+        reportDiet: 'आहार',
+        reportWorkout: 'व्यायाम / वर्कआउट',
+        hospitalsTitle: 'जवळचे प्रमुख रुग्णालये',
+        hospitalsNone: 'तुमच्या परिसरासाठी अजून रुग्णालयांची माहिती उपलब्ध नाही.'
+      }
+    };
+
+    const SESSIONS_KEY = 'healthbot_sessions_v1';
+
+    // Simple mapping from canonical symptom name (lowercase, spaces) to
+    // Hindi / Marathi display labels. Used only for chips; backend still
+    // works with English canonical names.
+    const SYMPTOM_DISPLAY = {
+      "high fever": { hi: "तेज़ बुखार", mr: "जोराचा ताप" },
+      "mild fever": { hi: "हल्का बुखार", mr: "हलका ताप" },
+      "headache": { hi: "सरदर्द", mr: "डोकेदुखी" },
+      "abdominal pain": { hi: "पेट दर्द", mr: "पोटदुखी" },
+      "stomach pain": { hi: "पेट दर्द", mr: "पोटदुखी" },
+      "nausea": { hi: "मतली", mr: "मळमळ" },
+      "vomiting": { hi: "उल्टी", mr: "ओकाऱ्या" },
+      "cough": { hi: "खांसी", mr: "खोकला" },
+      "runny nose": { hi: "नाक बहना", mr: "नाक वाहणे" },
+      "chest pain": { hi: "छाती में दर्द", mr: "छातीत वेदना" },
+      "yellowing of eyes": { hi: "आँखों में पीलापन", mr: "डोळ्यांमध्ये पिवळेपणा" },
+      "yellowish skin": { hi: "त्वचा में पीलापन", mr: "त्वचेत पिवळेपणा" },
+      "burning micturition": { hi: "पेशाब में जलन", mr: "लघवी करताना जळजळ" },
+      "spotting  urination": { hi: "पेशाब में धब्बे", mr: "लघवीमध्ये डाग" },
+      "fatigue": { hi: "थकान", mr: "दम लागणे" },
+      "malaise": { hi: "अस्वस्थता", mr: "अस्वस्थता" }
+    };
+
+    function symptomLabel(symptomCanonical){
+      const lang = state.lang || 'en';
+      const pretty = symptomCanonical.replace(/_/g,' ');
+      if(lang === 'en') return pretty;
+      const map = SYMPTOM_DISPLAY[pretty.toLowerCase()];
+      if(!map || !map[lang]) return pretty;
+      return `${map[lang]} (${pretty})`;
+    }
+
+    // Static hospital directory for supported locations
+    const HOSPITALS = {
+      "Marine Lines / South Mumbai": [
+        {
+          name: "Bombay Hospital & Medical Research Centre",
+          address: "12 Vitthaldas Thackersey Marg, Marine Lines, Mumbai 400020",
+          phone: "+91 22 2206 7676",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Bombay+Hospital+%26+Medical+Research+Centre+Marine+Lines+Mumbai"
+        },
+        {
+          name: "Saifee Hospital",
+          address: "Maharshi Karve Rd, Girgaon, Mumbai 400004",
+          phone: "+91 22 6757 0111",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Saifee+Hospital+Girgaon+Mumbai"
+        }
+      ],
+      "Peddar Road / South Mumbai": [
+        {
+          name: "Jaslok Hospital & Research Centre",
+          address: "15 Dr Gopalrao Deshmukh Marg, Peddar Rd, Mumbai 400026",
+          phone: "+91 99301 92000",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Jaslok+Hospital+%26+Research+Centre+Peddar+Road+Mumbai"
+        }
+      ],
+      "Charni Road / South Mumbai": [
+        {
+          name: "Sir H. N. Reliance Foundation Hospital",
+          address: "Raja Ram Mohan Roy Rd, Mumbai 400004",
+          phone: "",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Sir+H+N+Reliance+Foundation+Hospital+Mumbai"
+        }
+      ],
+      "Tardeo / South Mumbai": [
+        {
+          name: "Apollo Spectra Hospital Tardeo",
+          address: "Famous Cine Labs 156, Tardeo, Mumbai 400034",
+          phone: "+91 84484 40991",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Apollo+Spectra+Hospital+Tardeo+Mumbai"
+        }
+      ],
+      "Mumbai Central": [
+        {
+          name: "Wockhardt Hospitals Mumbai Central",
+          address: "1877 Dr Anandrao Nair Marg, Mumbai Central 400011",
+          phone: "+91 82911 01001",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Wockhardt+Hospitals+Mumbai+Central"
+        }
+      ],
+      "Sion East": [
+        {
+          name: "K.J. Somaiya Hospital & Research Center",
+          address: "Somaiya Ayurvihar, Eastern Express Hwy, Sion 400022",
+          phone: "+91 22 5095 4700",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=K+J+Somaiya+Hospital+%26+Research+Center+Sion+Mumbai"
+        }
+      ],
+      "King’s Circle / Sion": [
+        {
+          name: "Smt S R Mehta & Sir K P Cardiac Institute",
+          address: "Road 31, King’s Circle, Sion East, Mumbai 400022",
+          phone: "+91 22 6910 5400",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Smt+S+R+Mehta+%26+Sir+K+P+Cardiac+Institute+Sion+Mumbai"
+        }
+      ],
+      "Sion West": [
+        {
+          name: "Lokmanya Tilak Municipal General Hospital",
+          address: "Sion West, Mumbai 400022",
+          phone: "",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Lokmanya+Tilak+Municipal+General+Hospital+Sion+Mumbai"
+        }
+      ],
+      "Dharavi-Sion Link Road": [
+        {
+          name: "Lifecare Hospital Sion",
+          address: "Sion-Bandra Link Rd, Dharavi, Mumbai 400017",
+          phone: "+91 82918 54375",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Lifecare+Hospital+Sion+Mumbai"
+        }
+      ],
+      "Mahim": [
+        {
+          name: "Fortis S L Raheja Hospital",
+          address: "Raheja Rugnalaya Marg, Mahim West, Mumbai 400016",
+          phone: "+91 22 6884 6143",
+          mapsUrl: "https://www.google.com/maps/search/?api=1&query=Fortis+S+L+Raheja+Hospital+Mahim+Mumbai"
+        }
+      ]
+    };
+
+    fetch('/symptom_list').then(r=>r.json()).then(list=> state.allSymptoms = list);
+
+    function appendBot(html, speak=false){ const el=document.createElement('div'); el.className='message bot-message'; el.innerHTML=html; chat.appendChild(el); chat.scrollTop=chat.scrollHeight; if(speak){ try{ const u=new SpeechSynthesisUtterance(el.textContent); speechSynthesis.speak(u);}catch(e){} } }
+    function appendUser(text){ const el=document.createElement('div'); el.className='message user-message'; el.textContent=text; chat.appendChild(el); chat.scrollTop=chat.scrollHeight; }
+    function updateSidebar(){
+      const patient = [state.name,state.age,state.gender].filter(Boolean).join(', ')
+      document.getElementById('patient-info').textContent = patient || 'Not provided yet';
+      const all = state.symptoms.concat(state.negatives.map(n=>'no '+n));
+      document.getElementById('symptoms-info').textContent = all.join(', ') || 'Not provided yet';
+      document.getElementById('location-info').textContent = state.location || 'Not selected';
+    }
+
+    function renderSessions(){
+      if(!state.sessions.length){
+        sessionList.innerHTML = `<p style="opacity:0.8;">No previous sessions</p>`;
+        return;
+      }
+      sessionList.innerHTML = state.sessions.map(s=>`
+        <div class="session-item" data-id="${s.id}" style="padding:6px 8px; margin-bottom:4px; border-radius:8px; background:#ffffff10; border:1px solid #ffffff30; cursor:pointer;">
+          <div><strong>${s.title}</strong></div>
+          <div style="opacity:0.8;">${s.subtitle}</div>
+        </div>
+      `).join('');
+    }
+
+    function loadSessionsFromStorage(){
+      try{
+        const raw = localStorage.getItem(SESSIONS_KEY);
+        if(raw){
+          state.sessions = JSON.parse(raw);
+        }
+      }catch(e){
+        state.sessions = [];
+      }
+      renderSessions();
+    }
+
+    function saveSessionsToStorage(){
+      try{
+        localStorage.setItem(SESSIONS_KEY, JSON.stringify(state.sessions));
+      }catch(e){}
+    }
+
+    function persistCurrentSession(){
+      if(!state.lastPrediction) return;
+      const d = state.lastPrediction;
+      const ts = new Date().toLocaleString();
+      const id = Date.now().toString();
+      const title = d.predicted_disease || 'Session';
+      const subtitle = `${state.name||'Anon'} • ${ts}`;
+      const snapshot = {
+        id,
+        title,
+        subtitle,
+        lang: state.lang,
+        location: state.location,
+        name: state.name,
+        age: state.age,
+        gender: state.gender,
+        symptoms: state.symptoms,
+        negatives: state.negatives,
+        lastPrediction: d,
+        lastHospitals: state.lastHospitals,
+        chatHtml: chat.innerHTML
+      };
+      state.sessions.unshift(snapshot);
+      // keep only latest 20
+      state.sessions = state.sessions.slice(0,20);
+      saveSessionsToStorage();
+      renderSessions();
+    }
+
+    function loadSessionById(id){
+      const s = state.sessions.find(x=>x.id===id);
+      if(!s) return;
+      state.lang = s.lang || 'en';
+      state.location = s.location || '';
+      state.name = s.name || '';
+      state.age = s.age || '';
+      state.gender = s.gender || '';
+      state.symptoms = s.symptoms || [];
+      state.negatives = s.negatives || [];
+      state.lastPrediction = s.lastPrediction || null;
+      state.lastHospitals = s.lastHospitals || [];
+      state.step = 'symptoms'; // resume at symptoms for safety
+      document.getElementById('langSelect').value = state.lang;
+      document.getElementById('locationSelect').value = state.location || '';
+      updateSidebar();
+      chat.innerHTML = s.chatHtml || '';
+      document.getElementById('status-info').textContent = 'Loaded previous session';
+    }
+    function reset(){
+      const t = TEXT[state.lang] || TEXT.en;
+      chat.innerHTML = `<div class="message bot-message">${t.greeting}</div>`;
+      input.placeholder = t.placeholderAnswer;
+      input.value='';
+      state.step='name'; state.name=''; state.age=''; state.gender=''; state.symptoms=[]; state.negatives=[]; state.lastPrediction=null;
+      updateSidebar();
+      document.getElementById('status-info').textContent='In progress';
+      suggestBox.style.display='none'; suggestBox.innerHTML='';
+    }
+
+    document.getElementById('resetBtn').addEventListener('click', reset);
+
+    function chipsHtml(items){
+      state.lastSuggestions = items.slice();
+      const t = TEXT[state.lang] || TEXT.en;
+      return `<div class="chips">${items.map(s=>{
+        const label = symptomLabel(s);
+        return `<span class="chip" data-yes="${s}">${label}</span>`;
+      }).join('')}</div><div style="margin-top:6px;color:#555;font-size:.9rem;">${t.noneHint}</div>`;
+    }
+    chat.addEventListener('click', async (e)=>{
+      const yes=e.target.getAttribute?.('data-yes');
+      if(yes){
+        state.symptoms.push(yes);
+        updateSidebar();
+        appendUser(symptomLabel(yes));
+        await maybePredict();
+      }
+    });
+
+    function fuzzySuggest(text, limit=6){ const t=text.toLowerCase(); if(!t) return []; return state.allSymptoms.map(s=>({s,score: similarity(t,s)})).sort((a,b)=>b.score-a.score).slice(0,limit).map(x=>x.s); }
+    function similarity(a,b){ // simple token overlap + prefix
+      const A=a.split(/\s+/), B=b.split(/\s+/); const setB=new Set(B); let overlap=0; A.forEach(x=>{ if(setB.has(x)) overlap++; }); const pref=b.startsWith(a)?1:0; return overlap + pref + (a && b ? (1-Math.min(1, Math.abs(b.length-a.length)/Math.max(b.length,1)))*0.3:0); }
+
+    function showSuggestions(){
+      const t=input.value.trim();
+      const key=t.toLowerCase();
+      if(["none of these","i have none of these","none","no"].includes(key) && state.lastSuggestions.length){
+        // Mark current suggestions as negatives and fetch new ones
+        const addNeg = state.lastSuggestions.filter(s=>!state.symptoms.includes(s) && !state.negatives.includes(s));
+        if(addNeg.length){ state.negatives = state.negatives.concat(addNeg); updateSidebar(); appendUser(t); input.value=''; state.lastSuggestions=[]; maybePredict(); }
+        suggestBox.style.display='none'; suggestBox.innerHTML='';
+        return;
+      }
+      if(!t){ suggestBox.style.display='none'; suggestBox.innerHTML=''; return; }
+      const items=fuzzySuggest(t);
+      if(!items.length){ suggestBox.style.display='none'; return; }
+      suggestBox.innerHTML = items.map(s=>`<div class="suggest-item" data-sugg="${s}">${s}</div>`).join('');
+      suggestBox.style.display='block';
+    }
+    input.addEventListener('input', showSuggestions);
+    suggestBox.addEventListener('click', (e)=>{ const s=e.target.getAttribute?.('data-sugg'); if(s){ input.value=s; suggestBox.style.display='none'; }});
+
+    function extractFromParagraph(text){ const lower=text.toLowerCase(); const found=[]; for(const s of state.allSymptoms){ if(lower.includes(s)) found.push(s); } return found; }
+
+    async function maybePredict(){
+      document.getElementById('status-info').textContent='Thinking...';
+      const res = await fetch('/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: state.name, age: state.age, gender: state.gender, symptoms: state.symptoms.join(','), negatives: state.negatives }) });
+      const data = await res.json();
+      if(data.error){ appendBot(`❌ ${data.error}`); document.getElementById('status-info').textContent='Awaiting input'; return; }
+
+      if(data.need_more){
+        document.getElementById('status-info').textContent='Need more symptoms';
+        const t = TEXT[state.lang] || TEXT.en;
+        let html = `${t.needMoreIntro} ${data.top_k?.length?`<br/><br><strong>${t.currentCandidates}</strong>`:''}`;
+        if(data.top_k && data.top_k.length){
+          html += `<div class="candidates">${data.top_k.map(c=>`<div class="candidate"><div><strong>${c.disease}</strong> (${(c.prob*100).toFixed(0)}%)</div><div class="bar"><span style="width:${(c.prob*100).toFixed(0)}%"></span></div></div>`).join('')}</div>`;
+        }
+        if(data.suggested_symptoms && data.suggested_symptoms.length){ html += `<br/><strong>${t.moreQuestion}</strong>${chipsHtml(data.suggested_symptoms)}`; }
+        appendBot(html, true);
+        return;
+      }
+
+      state.lastPrediction = data;
+      document.getElementById('status-info').textContent='Prediction complete';
+      const t = TEXT[state.lang] || TEXT.en;
+      const confText = t.confidence(data.confidence_label || 'low');
+      const primary = data.top_k && data.top_k.length ? data.top_k[0] : null;
+      const others = data.top_k && data.top_k.length > 1 ? data.top_k.slice(1) : [];
+      appendBot(`
+        <strong>${t.predictionTitle}</strong><br/>
+        ${primary ? `<strong>${primary.disease}</strong> (${(primary.prob*100).toFixed(0)}% – ${confText})<br/><br/>` : ''}
+        <strong>Description:</strong> ${data.dis_des}<br/><br/>
+        <strong>Precautions:</strong> ${data.my_precautions.join(', ')}<br/><br/>
+        <strong>Medications:</strong> ${data.medications.join(', ')}<br/><br/>
+        <strong>Diet:</strong> ${data.my_diet.join(', ')}<br/><br/>
+        <strong>Workout:</strong> ${data.workout.join(', ')}<br/><br/>
+        ${others.length ? `<strong>${t.otherNote}</strong><br/>${others.map(c=>`${c.disease} (${(c.prob*100).toFixed(0)}%)`).join(', ')}<br/><br/>` : ''}
+        <em>${t.disclaimer}</em>
+      `, true);
+
+      // Suggest nearby hospitals based on selected location
+      const loc = state.location;
+      const hospitals = (loc && HOSPITALS[loc]) ? HOSPITALS[loc].slice(0,3) : [];
+      state.lastHospitals = hospitals;
+      if(hospitals.length){
+        let hHtml = `<br/><strong>${t.hospitalsTitle} (${loc}):</strong><br/>`;
+        hHtml += hospitals.map(h=>`<div style="margin-top:6px;">
+            <strong><a href="${h.mapsUrl||'#'}" target="_blank" rel="noopener noreferrer">${h.name}</a></strong><br/>
+            ${h.address}${h.phone?`<br/>📞 ${h.phone}`:''}
+          </div>`).join('');
+        appendBot(hHtml);
+      } else if(loc){
+        appendBot(`<em>${t.hospitalsNone}</em>`);
+      }
+
+      // Persist this completed prediction as a session
+      persistCurrentSession();
+    }
+
+    async function handleSend(){
+      const text = input.value.trim(); if(!text) return; appendUser(text); input.value=''; suggestBox.style.display='none';
+      if(state.step==='name'){
+        state.name=text;
+        state.step='age';
+        updateSidebar();
+        const t = TEXT[state.lang] || TEXT.en;
+        appendBot(t.nameFollowup(state.name));
+        return;
+      }
+      if(state.step==='age'){
+        state.age=text;
+        state.step='gender';
+        updateSidebar();
+        const t = TEXT[state.lang] || TEXT.en;
+        appendBot(t.askGender);
+        return;
+      }
+      if(state.step==='gender'){
+        state.gender=text;
+        state.step='symptoms';
+        updateSidebar();
+        const t = TEXT[state.lang] || TEXT.en;
+        appendBot(t.askSymptoms);
+        input.placeholder = t.placeholderSymptoms;
+        return;
+      }
+      if(state.step==='symptoms'){
+        const key = text.toLowerCase();
+        // Allow user to simply answer "no" (or "none of these") to skip
+        // the current suggestion set and treat all suggested symptoms as negatives.
+        if(["no","none","none of these","i have none of these","nahi","नहीं","नाही"].includes(key) && state.lastSuggestions.length){
+          const addNeg = state.lastSuggestions.filter(s=>!state.symptoms.includes(s) && !state.negatives.includes(s));
+          if(addNeg.length){
+            state.negatives = state.negatives.concat(addNeg);
+            updateSidebar();
+          }
+          state.lastSuggestions = [];
+          await maybePredict();
+          return;
+        }
+
+        const parts = text.includes(',') ? text.split(',').map(s=>s.trim()).filter(Boolean) : extractFromParagraph(text);
+        for(const p of parts){ if(!state.symptoms.includes(p)) state.symptoms.push(p); }
+        updateSidebar();
+        await maybePredict();
+        return;
+      }
+    }
+
+    sendBtn.addEventListener('click', handleSend);
+    input.addEventListener('keypress', (e)=>{ if(e.key==='Enter') handleSend(); });
+
+    // Mic input (basic Web Speech API)
+    let recognizing=false; let rec;
+    try {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(SR){
+        rec = new SR();
+        rec.lang='en-US';
+        rec.onresult=(e)=>{
+          const t=e.results[0][0].transcript;
+          input.value = input.value ? (input.value+ ' ' + t) : t;
+          showSuggestions();
+        };
+        rec.onend=()=>{ recognizing=false; micBtn.textContent='🎤'; };
+      }
+    } catch(e){}
+    micBtn.addEventListener('click', ()=>{
+      if(!rec) return;
+      if(recognizing){
+        rec.stop();
+        recognizing=false;
+        micBtn.textContent='🎤';
+      } else {
+        // Switch recognition language based on current UI language
+        if(state.lang === 'hi'){ rec.lang='hi-IN'; }
+        else if(state.lang === 'mr'){ rec.lang='mr-IN'; }
+        else { rec.lang='en-US'; }
+        rec.start();
+        recognizing=true;
+        micBtn.textContent='⏹';
+      }
+    });
+
+    document.getElementById('darkBtn').addEventListener('click', ()=> document.body.classList.toggle('dark'));
+    document.getElementById('fontBtn').addEventListener('click', ()=> document.body.classList.toggle('large-font'));
+
+    document.getElementById('downloadBtn').addEventListener('click', ()=>{
+      const d = state.lastPrediction;
+      const t = TEXT[state.lang] || TEXT.en;
+      const w = window.open('', '_blank');
+      const hospitals = state.lastHospitals || [];
+      const hospSection = hospitals.length ? `
+        <hr/>
+        <p><strong>${t.hospitalsTitle} (${state.location||'-'}):</strong></p>
+        <ul>
+          ${hospitals.map(h=>`<li><strong>${h.name}</strong> – ${h.address}${h.phone?` – ${h.phone}`:''} – ${h.mapsUrl?`<a href="${h.mapsUrl}" target="_blank" rel="noopener noreferrer">Open in Google Maps</a>`:''}</li>`).join('')}
+        </ul>` : '';
+      const body = `
+        <h2>${t.reportTitle}</h2>
+        <p><strong>Patient:</strong> ${state.name||'-'} | <strong>Age:</strong> ${state.age||'-'} | <strong>Gender:</strong> ${state.gender||'-'}</p>
+        <p><strong>Location:</strong> ${state.location||'-'}</p>
+        <p><strong>Symptoms:</strong> ${state.symptoms.concat(state.negatives.map(n=>'no '+n)).join(', ')||'-'}</p>
+        ${d?`<hr/><p><strong>${t.reportPredicted}:</strong> ${d.predicted_disease}</p>
+        <p><strong>${t.reportDescription}:</strong> ${d.dis_des}</p>
+        <p><strong>${t.reportPrecautions}:</strong> ${d.my_precautions.join(', ')}</p>
+        <p><strong>${t.reportMedications}:</strong> ${d.medications.join(', ')}</p>
+        <p><strong>${t.reportDiet}:</strong> ${d.my_diet.join(', ')}</p>
+        <p><strong>${t.reportWorkout}:</strong> ${d.workout.join(', ')}</p>`:''}
+        ${hospSection}`;
+      w.document.write(`<!DOCTYPE html><html><head><title>Report</title></head><body>${body}</body></html>`);
+      w.document.close(); w.focus(); w.print();
+    });
+
+    // Copy sharable link (current URL)
+    document.getElementById('copyLinkBtn').addEventListener('click', async ()=>{
+      const url = window.location.href.split('#')[0];
+      try{
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          await navigator.clipboard.writeText(url);
+          appendBot('🔗 Link copied to clipboard.');
+        }else{
+          prompt('Copy this link:', url);
+        }
+      }catch(e){
+        prompt('Copy this link:', url);
+      }
+    });
+
+    // Email report via mailto:
+    document.getElementById('emailBtn').addEventListener('click', ()=>{
+      const d = state.lastPrediction;
+      const t = TEXT[state.lang] || TEXT.en;
+      if(!d){
+        appendBot('Please complete a prediction first so I can prepare a report to email.');
+        return;
+      }
+      const lines = [];
+      lines.push('HealthBot Report');
+      lines.push('');
+      lines.push(`Patient: ${state.name||'-'} | Age: ${state.age||'-'} | Gender: ${state.gender||'-'}`);
+      lines.push(`Location: ${state.location||'-'}`);
+      lines.push(`Symptoms: ${state.symptoms.concat(state.negatives.map(n=>'no '+n)).join(', ')||'-'}`);
+      lines.push('');
+      lines.push(`${t.reportPredicted}: ${d.predicted_disease}`);
+      lines.push(`${t.reportDescription}: ${d.dis_des}`);
+      lines.push(`${t.reportPrecautions}: ${d.my_precautions.join(', ')}`);
+      lines.push(`${t.reportMedications}: ${d.medications.join(', ')}`);
+      lines.push(`${t.reportDiet}: ${d.my_diet.join(', ')}`);
+      lines.push(`${t.reportWorkout}: ${d.workout.join(', ')}`);
+      if(state.lastHospitals && state.lastHospitals.length){
+        lines.push('');
+        lines.push(`${t.hospitalsTitle} (${state.location||'-'}):`);
+        state.lastHospitals.forEach(h=>{
+          lines.push(`- ${h.name} – ${h.address}${h.phone?` – ${h.phone}`:''}${h.mapsUrl?` – ${h.mapsUrl}`:''}`);
+        });
+      }
+      const subject = encodeURIComponent('HealthBot Report');
+      const body = encodeURIComponent(lines.join('\n'));
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    });
+
+    // Language selector
+    const langSelect = document.getElementById('langSelect');
+    langSelect.value = state.lang;
+    langSelect.addEventListener('change', (e)=>{
+      state.lang = e.target.value || 'en';
+      reset();
+    });
+
+    // Location selector
+    const locSelect = document.getElementById('locationSelect');
+    locSelect.addEventListener('change', (e)=>{
+      state.location = e.target.value || '';
+      updateSidebar();
+    });
+
+    // Load previous sessions (if any) and start a new one
+    loadSessionsFromStorage();
+    reset();
+
+    // Click handler for session list
+    sessionList.addEventListener('click', (e)=>{
+      const item = e.target.closest('.session-item');
+      if(!item) return;
+      const id = item.getAttribute('data-id');
+      if(id) loadSessionById(id);
+    });
+    </script>
+</body>
+</html>

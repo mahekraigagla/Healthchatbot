@@ -1,0 +1,42 @@
+Disease,Symptom_1,Symptom_2,Symptom_3,Symptom_4,Symptom_5,Symptom_6,Symptom_7,Symptom_8
+(vertigo) Paroymsal  Positional Vertigo,nausea,vomiting,headache,unsteadiness,loss_of_balance,spinning_movements,,
+AIDS,high_fever,muscle_wasting,patches_in_throat,extra_marital_contacts,,,,
+Acne,skin_rash,blackheads,scurring,pus_filled_pimples,,,,
+Alcoholic hepatitis,distention_of_abdomen,vomiting,abdominal_pain,history_of_alcohol_consumption,yellowish_skin,fluid_overload.1,swelling_of_stomach,
+Allergy,continuous_sneezing,shivering,chills,watering_from_eyes,,,,
+Arthritis,stiff_neck,movement_stiffness,muscle_weakness,painful_walking,swelling_joints,,,
+Bronchial Asthma,family_history,mucoid_sputum,high_fever,breathlessness,fatigue,cough,,
+Cervical spondylosis,loss_of_balance,dizziness,neck_pain,weakness_in_limbs,back_pain,,,
+Chicken pox,malaise,red_spots_over_body,itching,fatigue,skin_rash,swelled_lymph_nodes,mild_fever,headache
+Chronic cholestasis,itching,vomiting,yellowing_of_eyes,abdominal_pain,loss_of_appetite,yellowish_skin,nausea,
+Common Cold,muscle_pain,sinus_pressure,congestion,chest_pain,loss_of_smell,redness_of_eyes,throat_irritation,phlegm
+Dengue,pain_behind_the_eyes,nausea,back_pain,headache,loss_of_appetite,high_fever,malaise,fatigue
+Diabetes ,increased_appetite,polyuria,weight_loss,irregular_sugar_level,blurred_and_distorted_vision,fatigue,lethargy,restlessness
+Dimorphic hemmorhoids(piles),pain_during_bowel_movements,constipation,irritation_in_anus,bloody_stool,pain_in_anal_region,,,
+Drug Reaction,itching,skin_rash,stomach_pain,spotting_ urination,burning_micturition,,,
+Fungal infection,itching,dischromic _patches,skin_rash,nodal_skin_eruptions,,,,
+GERD,cough,chest_pain,stomach_pain,acidity,ulcers_on_tongue,vomiting,,
+Gastroenteritis,diarrhoea,sunken_eyes,dehydration,vomiting,,,,
+Heart attack,chest_pain,sweating,breathlessness,vomiting,,,,
+Hepatitis B,malaise,yellowing_of_eyes,receiving_blood_transfusion,receiving_unsterile_injections,itching,fatigue,yellow_urine,abdominal_pain
+Hepatitis C,nausea,fatigue,yellowish_skin,family_history,loss_of_appetite,yellowing_of_eyes,,
+Hepatitis D,loss_of_appetite,vomiting,nausea,dark_urine,yellowish_skin,yellowing_of_eyes,fatigue,abdominal_pain
+Hepatitis E,loss_of_appetite,stomach_bleeding,yellowing_of_eyes,coma,abdominal_pain,fatigue,vomiting,joint_pain
+Hypertension ,loss_of_balance,lack_of_concentration,dizziness,headache,chest_pain,,,
+Hyperthyroidism,abnormal_menstruation,muscle_weakness,irritability,diarrhoea,sweating,restlessness,weight_loss,fatigue
+Hypoglycemia,palpitations,excessive_hunger,irritability,slurred_speech,nausea,blurred_and_distorted_vision,anxiety,sweating
+Hypothyroidism,abnormal_menstruation,enlarged_thyroid,brittle_nails,swollen_extremeties,irritability,depression,weight_gain,lethargy
+Impetigo,yellow_crust_ooze,blister,skin_rash,red_sore_around_nose,high_fever,,,
+Jaundice,itching,vomiting,dark_urine,yellowish_skin,high_fever,weight_loss,fatigue,abdominal_pain
+Malaria,muscle_pain,nausea,chills,headache,high_fever,sweating,vomiting,diarrhoea
+Migraine,irritability,depression,headache,excessive_hunger,indigestion,acidity,blurred_and_distorted_vision,visual_disturbances
+Osteoarthristis,swelling_joints,neck_pain,joint_pain,hip_joint_pain,knee_pain,painful_walking,,
+Paralysis (brain hemorrhage),altered_sensorium,headache,weakness_of_one_body_side,vomiting,,,,
+Peptic ulcer diseae,internal_itching,vomiting,passage_of_gases,abdominal_pain,indigestion,loss_of_appetite,,
+Pneumonia,rusty_sputum,chest_pain,fast_heart_rate,malaise,cough,high_fever,fatigue,breathlessness
+Psoriasis,skin_rash,inflammatory_nails,small_dents_in_nails,joint_pain,silver_like_dusting,skin_peeling,,
+Tuberculosis,mild_fever,swelled_lymph_nodes,chest_pain,blood_in_sputum,malaise,loss_of_appetite,phlegm,yellowing_of_eyes
+Typhoid,fatigue,chills,high_fever,abdominal_pain,diarrhoea,belly_pain,nausea,constipation
+Urinary tract infection,continuous_feel_of_urine,bladder_discomfort,burning_micturition,foul_smell_of urine,,,,
+Varicose veins,bruising,prominent_veins_on_calf,cramps,obesity,fatigue,swollen_legs,swollen_blood_vessels,
+hepatitis A,mild_fever,yellowing_of_eyes,muscle_pain,loss_of_appetite,vomiting,diarrhoea,nausea,dark_urine
