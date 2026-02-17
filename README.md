@@ -102,17 +102,8 @@ The system uses comprehensive medical datasets containing:
 🤖 HealthBot: [Shows detailed prediction results]
 ```
 
-## 👥 Team Members
 
-- **Soham Sonar**
-- **Tanmay Pramanick**  
-- **Kunal Rajput**
 
-## 📸 Screenshots
-
- ![](https://github.com/sohamvsonar/Disease-Prediction-and-Medical-Recommendation-System/blob/main/screenshots/ss2.jpg)
-
-## 🏗️ Project Structure
 
 ```
 Disease-Prediction-and-Medical-Recommendation-System/
